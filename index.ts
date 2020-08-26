@@ -2,6 +2,7 @@ import express from 'express';
 import puppeteer from 'puppeteer';
 
 async function capture() {
+	const now = Date.now();
 	const browser = await puppeteer.launch({
 		headless: false,
 		ignoreDefaultArgs: true,
@@ -13,10 +14,10 @@ async function capture() {
 	// await page.evaluate('window.setView(4)');
 	// await page.evaluate("window.setMode('HEX_BIN')");
 
-	await sleep(5000);
+	await sleep(2500);
 
 	await page.screenshot({ path: './images/example.png' });
-	console.log('finished');
+	console.log('finished in', Date.now() - now, 'ms');
 }
 
 async function sleep(time: number): Promise<void> {

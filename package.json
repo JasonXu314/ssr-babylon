@@ -4,9 +4,10 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"start:server": "nodemon --watch ./public --watch ./index.ts --exec ts-node ./index.ts",
-		"start:webpack": "webpack --config webpack.config.js --watch",
-		"start": "npm-run-all --parallel start:*"
+		"run:server": "nodemon --watch ./public --watch ./index.ts --exec ts-node ./index.ts",
+		"run:webpack": "webpack --config webpack.config.js --watch",
+		"start:all": "npm-run-all --parallel run:*",
+		"start": "xvfb-run -a --server-args=\"-screen 0 1280x800x24 -ac -nolisten tcp -dpi 96 +extension RANDR\" npm run start:all"
 	},
 	"keywords": [],
 	"author": "",
