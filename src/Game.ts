@@ -1,4 +1,5 @@
 import * as BABYLON from 'babylonjs';
+import { GLTF2Export, GLTFData } from 'babylonjs-serializers';
 import * as NE from 'nanoevents';
 import EventHandling from './eventHandling';
 import Helper from './helper';
@@ -94,6 +95,8 @@ export default class Game {
 		this.highlightLayer = new BABYLON.HighlightLayer('highlighter', this.scene1);
 
 		this.emitter.on('mainReset', this.reset.bind(this));
+
+		(window as any).exportScene = this.export.bind(this);
 	}
 
 	setup(): void {
@@ -294,11 +297,27 @@ export default class Game {
 		}
 	}
 
-	animate(): void {
-		this.engine.runRenderLoop(() => {
-			this.scene1.render();
-			this.scene2.render();
-			this.emitter.emit('tick');
-		});
+	draw(): void {
+		// 	this.engine.runRenderLoop(() => {
+		// 		this.scene1.render();
+		// 		this.scene2.render();
+		// 		this.emitter.emit('tick');
+		// 	});
+		this.scene1.render();
+		this.scene2.render();
+		console.log('drawing');
+	}
+
+	async export(): Promise<any> {
+		console.log('have res');
+		const res: GLTFData = await GLTF2Export.GLTFAsync(this.scene1, 'scene');
+
+		const bin = await (res.glTFFiles['scene.bin'] as Blob).arrayBuffer();
+		console.log(new Uint8Array(bin));
+
+		return {
+			gltf: res.glTFFiles['scene.gltf'],
+			bin: new Uint8Array(bin)
+		};
 	}
 }

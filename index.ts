@@ -11,12 +11,14 @@ async function capture() {
 	const page = await browser.newPage();
 
 	await page.goto('http://localhost:3000/index.html');
-	// await page.evaluate('window.setView(4)');
-	// await page.evaluate("window.setMode('HEX_BIN')");
 
 	await sleep(2500);
 
-	await page.screenshot({ path: './images/example.png' });
+	// const res = (await page.evaluate('window.exportScene()')) as string;
+	// console.log(res);
+	// await browser.close();
+	const res = await page.evaluate("window.createGame('https://raw.githubusercontent.com/debugpoint136/chromosome-3d/master/IMR90_chr07-0-159Mb.csv')");
+	console.log(res);
 	console.log('finished in', Date.now() - now, 'ms');
 }
 
