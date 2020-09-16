@@ -27,16 +27,3 @@ const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 	game.draw();
 	return game.export();
 };
-
-(window as any).test = async () => {
-	await sleep(5000);
-	return null;
-};
-
-async function sleep(time: number): Promise<void> {
-	return new Promise((resolve) => {
-		setTimeout(() => {
-			resolve();
-		}, time);
-	});
-}
