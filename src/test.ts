@@ -1,4 +1,4 @@
-import { Color3, Engine, HemisphericLight, Light, Mesh, MeshBuilder, Scene, SolidParticleSystem, StandardMaterial, UniversalCamera, Vector3 } from 'babylonjs';
+import { Engine, HemisphericLight, Light, Mesh, MeshBuilder, Scene, SolidParticleSystem, UniversalCamera, Vector3 } from 'babylonjs';
 import { GLTF2Export } from 'babylonjs-serializers';
 
 interface InterestPoint {
@@ -6,17 +6,6 @@ interface InterestPoint {
 	y: number;
 	z: number;
 	tag: number;
-}
-
-interface FlagData {
-	locus: {
-		start: number;
-		end: number;
-		chr: string;
-	};
-	strand: string;
-	name: string;
-	value: number;
 }
 
 interface SplinePath {
@@ -33,6 +22,7 @@ export default class Game {
 	private canvas: HTMLCanvasElement;
 	private engine: Engine;
 	private scene: Scene;
+	private mesh: Mesh;
 
 	private light: Light;
 	private unicam: UniversalCamera;
@@ -45,7 +35,7 @@ export default class Game {
 		this.light = new HemisphericLight('light', new Vector3(0, 1, 0), this.scene);
 		this.unicam = new UniversalCamera('unicam', new Vector3(0, 0, -10000), this.scene);
 
-		createParticle(sd, this.scene);
+		this.mesh = createParticle(sd, this.scene);
 	}
 
 	public draw(): void {
@@ -53,164 +43,24 @@ export default class Game {
 	}
 
 	public async export(): Promise<any> {
-		console.log('have res');
+		// const kinds = Object.keys(VertexBuffer).filter((key) => key.toLowerCase().endsWith('kind'));
+
+		// kinds.forEach((kind) => {
+		// 	console.log(kind, this.mesh.getVerticesData(VertexBuffer[kind])?.some((val: number) => isNaN(val)) || 'No Vertices');
+		// });
+
 		const res = await GLTF2Export.GLTFAsync(this.scene, 'scene');
 
 		const bin = await (res.glTFFiles['scene.bin'] as Blob).arrayBuffer();
-		console.log(new Uint8Array(bin));
+		const binArray = new Uint8Array(bin);
+		const serializedBin: number[] = [];
+
+		binArray.forEach((num) => serializedBin.push(num));
 
 		return {
 			gltf: res.glTFFiles['scene.gltf'],
-			bin: new Uint8Array(bin)
+			bin: serializedBin
 		};
-	}
-}
-
-class Helper {
-	constructor(private tubes: Mesh[], private flags: Mesh[], private arcs: Mesh[]) {}
-
-	public clearAll(): void {
-		console.log('clear all');
-
-		this.tubes.forEach((tube) => {
-			tube.dispose();
-		});
-		this.tubes = [];
-
-		this.flags.forEach((flag) => {
-			flag.dispose();
-		});
-		this.flags = [];
-
-		this.arcs.forEach((arc) => {
-			arc.dispose();
-		});
-		this.arcs = [];
-	}
-
-	public clearMeshObjs(): void {
-		console.log('clear meshObjs');
-
-		this.tubes.forEach((tube) => {
-			tube.dispose();
-		});
-		this.tubes = [];
-	}
-
-	public clearEpiData(): void {
-		console.log('clear epidata');
-
-		this.flags.forEach((flag) => {
-			flag.dispose();
-		});
-		this.flags = [];
-
-		this.arcs.forEach((arc) => {
-			arc.dispose();
-		});
-		this.arcs = [];
-	}
-}
-
-class Structure {
-	constructor(private helper: Helper) {}
-
-	public renderStructure(): void {
-		this.helper.clearMeshObjs();
-	}
-}
-
-function filterPoints(pointsArray: Array<Vector3>, maxBound: Vector3, minBound: Vector3): Array<Vector3> {
-	const points = [...pointsArray];
-	const sorted: Vector3[] = [];
-
-	points.forEach((point) => {
-		if (point.x < maxBound.x && point.x > minBound.x && point.y < maxBound.y && point.y > minBound.y && point.z < maxBound.z && point.z > minBound.z) {
-			sorted.push(point);
-		}
-	});
-	return sorted;
-}
-
-function createTagArray(points: Array<InterestPoint>): Array<number> {
-	const tags = [];
-	points.forEach((point) => {
-		tags.push(point.tag);
-	});
-	return tags;
-}
-
-function splitVectors(points: Array<Vector3>): { x: number[]; y: number[]; z: number[] } {
-	const main = { x: [], y: [], z: [] };
-
-	points.forEach((point) => {
-		main.x.push(point.x);
-		main.y.push(point.y);
-		main.z.push(point.z);
-	});
-
-	return main;
-}
-
-function findMaxVector(points: Array<Vector3>): Vector3 {
-	const result = splitVectors(points);
-
-	return new Vector3(Math.max(...result.x), Math.max(...result.y), Math.max(...result.z));
-}
-
-function findMinVector(points: Array<Vector3>): Vector3 {
-	const result = splitVectors(points);
-
-	return new Vector3(Math.min(...result.x), Math.min(...result.y), Math.min(...result.z));
-}
-
-function denoodle(noodled: Array<any>): Array<any> {
-	let helperArray = [];
-	const target = [];
-
-	for (let i = 0; i < noodled.length - 1; i += 1) {
-		helperArray.push(noodled[i]);
-
-		if (Number(noodled[i].tag + 1) !== Number(noodled[i + 1].tag)) {
-			target.push(helperArray);
-			helperArray = [];
-		}
-	}
-
-	return target;
-}
-
-function createTube(initArray: any[], scene: Scene): Mesh[] {
-	if (Array.isArray(initArray[0]) === false) {
-		// if tube should be created as whole piece
-		const tube = MeshBuilder.CreateLines('tube', { points: initArray, updatable: true }, scene);
-		return [tube];
-	} else {
-		// if tube should be created in separate sections (de-noodled)
-		const tubes = initArray.map((group) => {
-			if (group.length > 1) {
-				// if tube section has more than one point within selected positions
-				const tube = MeshBuilder.CreateLines('tube', { points: group, updatable: true }, scene);
-				return tube;
-			} else if (group.length === 1) {
-				// if tube section has only one point within selected positions
-				const isoCoord = MeshBuilder.CreateSphere(
-					'isocoord',
-					{
-						diameter: 100,
-						updatable: true
-					},
-					scene
-				);
-				const sphereMaterial = new StandardMaterial('spherematerial', scene);
-				sphereMaterial.diffuseColor = new Color3(1, 1, 0);
-				isoCoord.material = sphereMaterial;
-				isoCoord.position.set(group[0].x, group[0].y, group[0].z);
-				return isoCoord;
-			}
-		});
-
-		return tubes;
 	}
 }
 
@@ -227,7 +77,7 @@ function createParticle(initArray: any[], scene: Scene): Mesh {
 	let greenSwitch = 1;
 
 	// custom position function for SPS creation
-	const myPositionFunction = (particle, i, s) => {
+	const positionFunction = (particle: any, i: number) => {
 		particle.position.x = pointArray[i].x;
 		particle.position.y = pointArray[i].y;
 		particle.position.z = pointArray[i].z;
@@ -247,11 +97,11 @@ function createParticle(initArray: any[], scene: Scene): Mesh {
 		if (i / pointArray.length > 0.8) {
 			greenSwitch = 0;
 		}
-		particle.color = new BABYLON.Color3(
-			Math.cos(0.75 * Math.PI * (i / pointArray.length)),
-			Math.sin(0.5 * Math.PI * (i / pointArray.length)) * greenSwitch,
-			Math.sin(1.5 * Math.PI * (i / pointArray.length - 0.5)) * blueSwitch
-		);
+		// particle.color = new BABYLON.Color3(
+		// 	Math.cos(0.75 * Math.PI * (i / pointArray.length)),
+		// 	Math.sin(0.5 * Math.PI * (i / pointArray.length)) * greenSwitch,
+		// 	Math.sin(1.5 * Math.PI * (i / pointArray.length - 0.5)) * blueSwitch
+		// );
 	};
 
 	var model = MeshBuilder.CreatePlane(
@@ -271,7 +121,7 @@ function createParticle(initArray: any[], scene: Scene): Mesh {
 		expandable: true
 	});
 	SPS.addShape(model, nb, {
-		positionFunction: myPositionFunction
+		positionFunction
 	});
 
 	const mesh = SPS.buildMesh();
