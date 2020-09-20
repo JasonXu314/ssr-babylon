@@ -50,14 +50,18 @@ async function sleep(time: number): Promise<void> {
 		} else {
 			const data = await capture(url);
 
-			console.log(typeof data.gltf);
-
 			const id = uuid();
 			fs.writeFileSync(path.resolve(__dirname, 'files', id + '.gltf'), data.gltf.replace('scene.bin', `${id}.bin`));
 			fs.writeFileSync(path.resolve(__dirname, 'files', id + '.bin'), Uint8Array.from(data.bin));
 			res.status(200).send(id);
 			return;
 		}
+	});
+
+	app.get('/files/:id', async (req, res) => {
+		const fileName = req.params.id;
+
+		res.sendFile(path.resolve(__dirname, 'files', fileName));
 	});
 
 	app.listen(3000, async () => {
