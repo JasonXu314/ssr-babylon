@@ -15,7 +15,10 @@ input.addEventListener('change', (evt) => {
 button.addEventListener('click', () => {
 	BABYLON.SceneLoader.Append('/files/', id + '.gltf', scene);
 
-	scene.createDefaultCameraOrLight();
+	const light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(0, 1, 0), scene);
+	const camera = new BABYLON.UniversalCamera('unicam', new BABYLON.Vector3(0, 0, -10000), scene);
+
+	scene.attachControl();
 
 	engine.runRenderLoop(() => {
 		scene.render();

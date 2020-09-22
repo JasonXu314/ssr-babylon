@@ -22,12 +22,22 @@
 				width: 100vw;
 				display: block;
 			}
+
+			body {
+				position: relative;
+			}
+
+			#inputs {
+				position: absolute;
+			}
 		</style>
 	</head>
 	<body>
 		<canvas id="canvas"></canvas>
-		<input type="text" id="id" />
-		<button id="load">Load Scene</button>
+		<div id="inputs">
+			<input type="text" id="id" />
+			<button id="load">Load Scene</button>
+		</div>
 		<script src="loader.js"></script>
 	</body>
 </html>
